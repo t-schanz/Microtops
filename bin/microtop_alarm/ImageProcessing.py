@@ -1,4 +1,3 @@
-
 from DataHandling import read_image
 import abc
 import cv2
@@ -6,6 +5,7 @@ from datetime import datetime as dt
 import numpy as np
 import collections
 import pysolar
+
 
 class ImageProcessor(object):
 
@@ -26,7 +26,7 @@ class ImageProcessor(object):
 
         self.date = None
 
-    def get_cloudiness_status(self, image_path, date):
+    def get_cloudiness_status(self, image_path, date, coverage_thresh=0.5):
         """
         Returns 0 if there are clouds around the sun.
         Returns 1 if there are no clouds around the sun.
@@ -36,19 +36,32 @@ class ImageProcessor(object):
             date: datetime.datetime object
         """
 
+        self.lat, self.lon, self.pitch, self.roll, self.heading = self.read_dship_data()
         image = read_image(image_path)
         image = self.make_image_square(image)
+        image = self._rotate_image(image, self.heading)
         self.image = image
-        self.crop_image(image, elevation=30)
+        self.crop_image(image, elevation=0)
         self.date = date
-        self.lat, self.lon, self.pitch, self.roll, self.heading = self.read_dship_data()
         self.get_sun_position()
         self.remove_sun()
         self.cloud_mask = self.create_cloud_mask(image)
-
+        self.get_sun_square()
         # sun_position = self.find_sun_position(image, lat, lon, pitch, roll)
+        coverage = self._calculate_coverage()
+        if coverage < coverage_thresh:
+            return 1
+        else:
+            return 0
 
-        pass
+    def _calculate_coverage(self):
+        mask = self.mini_mask.copy()
+        cloud_pixels = len(np.where(mask == 1)[0])
+        sky_pixels = len(np.where(mask == 0)[0])
+
+        coverage = cloud_pixels /(cloud_pixels + sky_pixels)
+
+        return coverage
 
     def make_image_square(self, image: np.ndarray) -> np.ndarray:
         x, y = self.find_center(image)
@@ -56,9 +69,9 @@ class ImageProcessor(object):
         height = image.shape[0]
 
         if height < width:
-            square_image = image[:, x-int(height/2):x+int(height/2)]
+            square_image = image[:, x - int(height / 2):x + int(height / 2)]
         else:
-            square_image = image[y-int(width/2):y+int(height/2), :]
+            square_image = image[y - int(width / 2):y + int(height / 2), :]
 
         return square_image
 
@@ -76,7 +89,7 @@ class ImageProcessor(object):
 
     @abc.abstractmethod
     def read_dship_data(self) -> (float, float, float, float, float):
-        return (48, 123, 0, 0, 270)
+        return (48, 123, 0, 0, 293)
         # return (lat, lon, pitch, roll, heading)
 
     @abc.abstractmethod
@@ -142,17 +155,16 @@ class ImageProcessor(object):
         y, x = np.ogrid[-y_sol_cen:y_size - y_sol_cen, -x_sol_cen:x_size - x_sol_cen]
 
         size = 50
-        radius_sol_area = size*9
+        radius_sol_area = size * 9
         sol_mask_area = x ** 2 + y ** 2 <= radius_sol_area ** 2
-        new_mask = np.logical_and(~sol_mask_area,mask_sol1)
+        new_mask = np.logical_and(~sol_mask_area, mask_sol1)
 
         cloud_image = image.copy()
         cloud_image[:, :, :][new_mask] = [255, 0, 0]
-        cloud_mask = cloud_image[:,:,0].copy()
-        cloud_mask[:,:][np.where(cloud_mask != 0)] = 2
-        cloud_mask[:,:][self.mask_around_sun] = 0
-        cloud_mask[:,:][new_mask] = 1
-
+        cloud_mask = cloud_image[:, :, 0].copy()
+        cloud_mask[:, :][np.where(cloud_mask != 0)] = 2
+        cloud_mask[:, :][self.mask_around_sun] = 0
+        cloud_mask[:, :][new_mask] = 1
 
         Radius_sol = 100
         sol_mask_cen = x ** 2 + y ** 2 <= Radius_sol ** 2
@@ -160,7 +172,7 @@ class ImageProcessor(object):
         # AREA AROUND SUN:
         parameter = np.zeros(size)
         for j in range(size):
-            parameter[j] = (0 + j * 0.4424283716980435 - pow(j, 2) * 0.06676211439554262 + pow(j,3) *
+            parameter[j] = (0 + j * 0.4424283716980435 - pow(j, 2) * 0.06676211439554262 + pow(j, 3) *
                             0.0026358061791573453 - pow(j, 4) * 0.000029417130873311177 + pow(j, 5) *
                             1.0292852149593944e-7) * 0.001
 
@@ -170,7 +182,7 @@ class ImageProcessor(object):
             mask2 = np.logical_and(~sol_mask_cen, sol_mask)
             sol_mask_cen = np.logical_or(sol_mask, sol_mask_cen)
 
-            mask3 = SI < parameter[j]+0.08
+            mask3 = SI < parameter[j] + 0.08
             mask3 = np.logical_and(mask2, mask3)
             # image_array_c[mask3] = [255, 0, 0]
             cloud_image[mask3] = [255, 255 - 3 * j, 0]
@@ -191,7 +203,7 @@ class ImageProcessor(object):
         # sun_pos = self.find_nearest_idx(self.angle_array[:, :, 0], self.angle_array[:, :, 1],
         #                                 self.sun_azimuth, self.sun_elevation)
 
-        #-----------Draw circle around position of sun--------------------------------------------------------------
+        # -----------Draw circle around position of sun--------------------------------------------------------------
 
         # x_sol_cen, y_sol_cen = sun_pos
         x_sol_cen, y_sol_cen = self.ele_azi_to_pixel(self.sun_azimuth, self.sun_elevation)
@@ -232,10 +244,10 @@ class ImageProcessor(object):
 
         # print("DIMENSION: ", np.ndim(image))
         if np.shape(image)[2] == 3:
-            image[:,:,:][~center_mask] = [crop_value,crop_value,crop_value]
+            image[:, :, :][~center_mask] = [crop_value, crop_value, crop_value]
         elif np.shape(image)[2] == 2:
             # print("Cropping image!")
-            image[:, :][~center_mask] = [crop_value,crop_value]
+            image[:, :][~center_mask] = [crop_value, crop_value]
         elif np.ndim(image) == 2:
             # print("Cropping image!")
             image[:, :][~center_mask] = crop_value
@@ -275,7 +287,7 @@ class ImageProcessor(object):
         y_dash = self._convert_var_to_dash(yy)
 
         # Azimuth angle:
-        angle_array[xx, yy, 0] = self._azimuth_angle(x_dash, y_dash)
+        angle_array[xx, yy, 0] = self._azimuth_angle(x_dash, y_dash) + self.heading
         angle_array[:, :, 0] = np.subtract(angle_array[:, :, 0], 90)
         negative_mask = angle_array[:, :, 0] < 0
         angle_array[:, :, 0][negative_mask] = np.add(angle_array[:, :, 0][negative_mask], 360)
@@ -425,15 +437,50 @@ class ImageProcessor(object):
 
         self.sun_azimuth = solarheading
 
+    def _rotate_image(self, image, deg):
+        """
+        Uses the mathematical rotation of a matrix by creating a rotation-matrix M
+        to rotate the image by a certain degree.
+
+        The result is stored as class-variable self.rotated
+
+        Args:
+            deg: degree (in meteorological direction) for the image to be rotated
+        """
+        rows, cols = self.get_image_size(image)
+        M = cv2.getRotationMatrix2D((cols / 2, rows / 2), -deg, 1)
+        self.rotated = cv2.warpAffine(image, M, (cols, rows))
+        return self.rotated
+
+    def get_sun_square(self, size=600):
+        x_sol_cen, y_sol_cen = self.ele_azi_to_pixel(self.sun_azimuth, self.sun_elevation)
+
+
+        x_size, y_size = self.get_image_size(self.image)
+
+        mini_image = np.empty((size, size, 3))
+        mini_mask = np.empty((size, size))
+
+        self.mini_image = self.image[(y_sol_cen-int(size/2)):(y_sol_cen+int(size/2)),
+                          (x_sol_cen - int(size / 2)):(x_sol_cen + int(size / 2)), :]
+        self.mini_mask = self.cloud_mask[(y_sol_cen-int(size/2)):(y_sol_cen+int(size/2)),
+                          (x_sol_cen - int(size / 2)):(x_sol_cen + int(size / 2))]
+
 
 if __name__ == "__main__":
-    file = "C:/Users/darkl/PycharmProjects/Microtops/data/m190530171311890.jpg"
+    file = "C:/Users/darkl/PycharmProjects/Microtops/data/m190530211401627.jpg"
     SkImager = ImageProcessor()
-    date = dt(2019, 5, 30, 17, 13, 11)
-    SkImager.get_cloudiness_status(file, date)
+    date = dt(2019, 5, 30, 21, 14, 32)
+    status = SkImager.get_cloudiness_status(file, date)
 
-    import matplotlib.pyplot as plt
-    fig, (ax1, ax2) = plt.subplots(ncols=2)
-    ax1.imshow(SkImager.image)
-    ax2.imshow(SkImager.cloud_mask)
-    plt.show()
+    # on linux:
+    # import os
+    # beep = lambda x: os.system("echo -n '\a';sleep 0.2;" * x)
+    # beep(3)
+
+    # on windows:
+    import winsound
+    if status:
+        frequency = 600  # Set Frequency To 2500 Hertz
+        duration = 1000  # Set Duration To 1000 ms == 1 second
+        winsound.Beep(frequency, duration)
