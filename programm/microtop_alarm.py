@@ -24,7 +24,7 @@ while True:
     SkImager = ImageProcessor()
     status = SkImager.get_cloudiness_status(file)
 
-    if (minute_counter > 15) and not status:
+    if (minute_counter > 15) and status:
         os.system("tput bel")
         minute_counter = 0
 
