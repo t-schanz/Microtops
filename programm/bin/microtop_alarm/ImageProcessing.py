@@ -467,10 +467,17 @@ class ImageProcessor(object):
         mini_image = np.empty((size, size, 3))
         mini_mask = np.empty((size, size))
 
-        assert y_sol_cen-int(size/2) > 0
-        assert y_sol_cen - int(size / 2) < y_size
-        assert x_sol_cen - int(size / 2) > 0
-        assert x_sol_cen - int(size / 2) < x_size
+        checker = True
+        while checker:
+            try:
+                assert y_sol_cen-int(size/2) > 0
+                assert y_sol_cen - int(size / 2) < y_size
+                assert x_sol_cen - int(size / 2) > 0
+                assert x_sol_cen - int(size / 2) < x_size
+                checker = False
+            except AssertionError:
+                logging.debug("Have to lower resolution")
+                size -= 100
 
         self.mini_image = self.image[(y_sol_cen-int(size/2)):(y_sol_cen+int(size/2)),
                           (x_sol_cen - int(size / 2)):(x_sol_cen + int(size / 2)), :]
