@@ -1,5 +1,4 @@
 from .DataHandling import read_image
-import abc
 import cv2
 from datetime import datetime as dt
 import numpy as np
@@ -87,7 +86,6 @@ class ImageProcessor(object):
 
         return center_x, center_y
 
-    @abc.abstractmethod
     def read_dship_data(self) -> (float, float, float, float):
         data = recieve_data()
         self.lat = data["lat"]
@@ -95,7 +93,6 @@ class ImageProcessor(object):
         self.heading = data["heading"]
         self.date = dt.strptime(data["date"], "%Y%m%d%H%M%S")
 
-    @abc.abstractmethod
     def find_sun_position(self, image, lat, lon, pitch, roll) -> (float, float):
         pass
         # return(x, y)
