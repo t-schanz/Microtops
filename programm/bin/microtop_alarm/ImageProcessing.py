@@ -435,6 +435,8 @@ class ImageProcessor(object):
                 solarheading = ((sun_azimuth * -1) - 180)
             if sun_azimuth >= 0:
                 solarheading = sun_azimuth
+        else:
+            solarheading = sun_azimuth
 
         self.sun_azimuth = solarheading
 
