@@ -6,6 +6,7 @@ import configparser
 import os
 import time
 import sys
+import logging
 
 minute_counter = 100
 here = os.path.realpath(__file__)
@@ -13,6 +14,7 @@ here = os.path.split(here)[0]
 init_file = (here + "/../PATH.ini")
 config = configparser.ConfigParser()
 config.read(init_file)
+logging.basicConfig(level=logging.DEBUG)
 
 while True:
     now = dt.utcnow()
