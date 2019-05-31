@@ -23,7 +23,7 @@ while True:
     status = SkImager.get_cloudiness_status(file)
 
     if (minute_counter > 15) and not status:
-        os.system("( speaker-test -t sine -f 1000 )& pid=$! ; sleep 0.1s ; kill -9 $pid")
+        os.system("tput bel")
         minute_counter = 0
 
     time.sleep(1*60)
