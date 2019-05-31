@@ -14,7 +14,7 @@ config.read(init_file)
 
 while True:
     now = dt.utcnow()
-    path = now.strftime(config["ALLSKY"]["PATH"] + "%Y%m%d%H/*")
+    path = now.strftime(config["ALLSKY"]["PATH"] + "%Y/%m/%d/%H/*")
     file = sorted(glob.glob(path))[-1]
 
     SkImager = ImageProcessor()
