@@ -6,6 +6,8 @@ import collections
 import pysolar
 from .DShipHandling import recieve_data
 import pytz
+import logging
+
 
 class ImageProcessor(object):
 
@@ -57,6 +59,7 @@ class ImageProcessor(object):
         mask = self.mini_mask.copy()
         cloud_pixels = len(np.where(mask == 1)[0])
         sky_pixels = len(np.where(mask == 0)[0])
+        logging.debug(f"cloud_pixel: {cloud_pixels} | sky_pixel: {sky_pixels}")
 
         coverage = cloud_pixels /(cloud_pixels + sky_pixels)
 
@@ -471,6 +474,7 @@ class ImageProcessor(object):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     file = "C:/Users/darkl/PycharmProjects/Microtops/data/m190530211401627.jpg"
     SkImager = ImageProcessor()
     date = dt(2019, 5, 30, 21, 14, 32)
