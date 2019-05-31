@@ -1,10 +1,10 @@
-from DataHandling import read_image
+from .DataHandling import read_image
 import cv2
 from datetime import datetime as dt
 import numpy as np
 import collections
 import pysolar
-from DShipHandling import recieve_data
+from .DShipHandling import recieve_data
 import pytz
 import logging
 
