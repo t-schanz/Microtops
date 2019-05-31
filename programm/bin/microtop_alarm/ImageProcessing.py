@@ -458,7 +458,7 @@ class ImageProcessor(object):
         self.rotated = cv2.warpAffine(image, M, (cols, rows))
         return self.rotated
 
-    def get_sun_square(self, size=100):
+    def get_sun_square(self, size=600):
         x_sol_cen, y_sol_cen = self.ele_azi_to_pixel(self.sun_azimuth, self.sun_elevation)
 
 
