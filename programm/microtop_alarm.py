@@ -6,17 +6,15 @@ import os
 import time
 
 minute_counter = 100
+here = os.path.realpath(__file__)
+here = os.path.split(here)[0]
+init_file = (here + "/../PATH.ini")
+config = configparser.ConfigParser()
+config.read(init_file)
 
 while True:
-    here = os.path.realpath(__file__)
-    here = os.path.split(here)[0]
-    init_file = (here + "/../PATH.ini")
-
-    config = configparser.ConfigParser()
-    config.read(init_file)
-
     now = dt.utcnow()
-    path = now.strftime(config["ALLSKY"]["PATH"])
+    path = now.strftime(config["ALLSKY"]["PATH"] + "%Y%m%d%H/*")
     file = sorted(glob.glob(path))[-1]
 
     SkImager = ImageProcessor()
