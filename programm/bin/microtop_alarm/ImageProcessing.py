@@ -467,6 +467,11 @@ class ImageProcessor(object):
         mini_image = np.empty((size, size, 3))
         mini_mask = np.empty((size, size))
 
+        assert y_sol_cen-int(size/2) > 0
+        assert y_sol_cen - int(size / 2) < y_size
+        assert x_sol_cen - int(size / 2) > 0
+        assert x_sol_cen - int(size / 2) < x_size
+
         self.mini_image = self.image[(y_sol_cen-int(size/2)):(y_sol_cen+int(size/2)),
                           (x_sol_cen - int(size / 2)):(x_sol_cen + int(size / 2)), :]
         self.mini_mask = self.cloud_mask[(y_sol_cen-int(size/2)):(y_sol_cen+int(size/2)),
