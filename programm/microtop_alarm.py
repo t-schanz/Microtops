@@ -1,9 +1,11 @@
 from bin.microtop_alarm.ImageProcessing import ImageProcessor
+from bin.microtop_alarm.SendingMail import ErrorMailer
 import glob
 from datetime import datetime as dt
 import configparser
 import os
 import time
+import sys
 
 minute_counter = 100
 here = os.path.realpath(__file__)
@@ -20,9 +22,10 @@ while True:
     SkImager = ImageProcessor()
     status = SkImager.get_cloudiness_status(file)
 
-    if (minute_counter > 15) and status:
-        beep = lambda x: os.system("echo -n '\a';sleep 0.2;" * x)
-        beep(3)
+    if (minute_counter > 15) and not status:
+        Mailer = ErrorMailer("pythonscripterrorlog@gmail.com", sys.argv[0], logfile="../logs/EvalN2N.log")
+        Mailer.send_error_log("darklefknight@googlemail.com")
+        Mailer.send_error_log("julia.menken@studium.uni-hamburg.de")
         minute_counter = 0
 
     time.sleep(1*60)
