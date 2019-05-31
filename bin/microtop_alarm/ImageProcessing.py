@@ -1,10 +1,11 @@
-from DataHandling import read_image
+from .DataHandling import read_image
 import abc
 import cv2
 from datetime import datetime as dt
 import numpy as np
 import collections
 import pysolar
+from .DShipHandling import recieve_data
 
 
 class ImageProcessor(object):
@@ -26,7 +27,7 @@ class ImageProcessor(object):
 
         self.date = None
 
-    def get_cloudiness_status(self, image_path, date, coverage_thresh=0.5):
+    def get_cloudiness_status(self, image_path, coverage_thresh=0.5):
         """
         Returns 0 if there are clouds around the sun.
         Returns 1 if there are no clouds around the sun.
@@ -36,13 +37,12 @@ class ImageProcessor(object):
             date: datetime.datetime object
         """
 
-        self.lat, self.lon, self.pitch, self.roll, self.heading = self.read_dship_data()
+        self.read_dship_data()
         image = read_image(image_path)
         image = self.make_image_square(image)
         image = self._rotate_image(image, self.heading)
         self.image = image
         self.crop_image(image, elevation=0)
-        self.date = date
         self.get_sun_position()
         self.remove_sun()
         self.cloud_mask = self.create_cloud_mask(image)
@@ -88,9 +88,12 @@ class ImageProcessor(object):
         return center_x, center_y
 
     @abc.abstractmethod
-    def read_dship_data(self) -> (float, float, float, float, float):
-        return (48, 123, 0, 0, 293)
-        # return (lat, lon, pitch, roll, heading)
+    def read_dship_data(self) -> (float, float, float, float):
+        data = recieve_data()
+        self.lat = data["lat"]
+        self.lon = data["lon"]
+        self.heading = data["heading"]
+        self.date = dt.strptime(data["date"], "%Y%m%d%H%M%S")
 
     @abc.abstractmethod
     def find_sun_position(self, image, lat, lon, pitch, roll) -> (float, float):
@@ -471,7 +474,7 @@ if __name__ == "__main__":
     file = "C:/Users/darkl/PycharmProjects/Microtops/data/m190530211401627.jpg"
     SkImager = ImageProcessor()
     date = dt(2019, 5, 30, 21, 14, 32)
-    status = SkImager.get_cloudiness_status(file, date)
+    status = SkImager.get_cloudiness_status(file)
 
     # on linux:
     # import os
