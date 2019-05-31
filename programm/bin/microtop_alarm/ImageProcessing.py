@@ -5,7 +5,7 @@ import numpy as np
 import collections
 import pysolar
 from .DShipHandling import recieve_data
-
+import pytz
 
 class ImageProcessor(object):
 
@@ -91,7 +91,7 @@ class ImageProcessor(object):
         self.lat = data["lat"]
         self.lon = data["lon"]
         self.heading = data["heading"]
-        self.date = dt.strptime(data["date"], "%Y%m%d%H%M%S")
+        self.date = dt.strptime(data["date"], "%Y%m%d%H%M%S").replace(tzinfo=pytz.UTC)
 
     def find_sun_position(self, image, lat, lon, pitch, roll) -> (float, float):
         pass
@@ -418,6 +418,7 @@ class ImageProcessor(object):
         date of the image.
 
         """
+
         sun_elevation = pysolar.solar.get_altitude(latitude_deg=self.lat, longitude_deg=self.lon,
                                                    when=self.date, elevation=self.height)
 
