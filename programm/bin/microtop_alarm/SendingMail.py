@@ -34,3 +34,7 @@ class ErrorMailer(object):
 
         return_text = "Its time again for some microtop measurements!"
         return return_text
+
+if __name__ == "__main__":
+    Mailer = ErrorMailer("pythonscripterrorlog@gmail.com", "RCNNlogger")
+    Mailer.send_error_log("darklefknight@googlemail.com")
