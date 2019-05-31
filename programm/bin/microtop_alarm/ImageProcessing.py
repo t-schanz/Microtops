@@ -1,10 +1,10 @@
-from .DataHandling import read_image
+from DataHandling import read_image
 import cv2
 from datetime import datetime as dt
 import numpy as np
 import collections
 import pysolar
-from .DShipHandling import recieve_data
+from DShipHandling import recieve_data
 import pytz
 import logging
 
@@ -458,7 +458,7 @@ class ImageProcessor(object):
         self.rotated = cv2.warpAffine(image, M, (cols, rows))
         return self.rotated
 
-    def get_sun_square(self, size=600):
+    def get_sun_square(self, size=100):
         x_sol_cen, y_sol_cen = self.ele_azi_to_pixel(self.sun_azimuth, self.sun_elevation)
 
 
