@@ -23,9 +23,7 @@ while True:
     status = SkImager.get_cloudiness_status(file)
 
     if (minute_counter > 15) and not status:
-        Mailer = ErrorMailer("pythonscripterrorlog@gmail.com", sys.argv[0])
-        Mailer.send_error_log("darklefknight@googlemail.com")
-        Mailer.send_error_log("julia.menken@studium.uni-hamburg.de")
+        os.system("( speaker-test -t sine -f 1000 )& pid=$! ; sleep 0.1s ; kill -9 $pid")
         minute_counter = 0
 
     time.sleep(1*60)
