@@ -6,8 +6,20 @@ Created on Thu May 30 08:47:23 2019
 @author: julia
 """
 import pandas as pd
-import read_save_csv as rs_csv
 
+def read_data(path,file):
+    df = pd.read_csv(path+file, sep=",", header=2, skipfooter=1, engine="python",
+                       parse_dates={'datetime': ['DATE', 'TIME']},
+                       index_col="datetime")
+    
+    df.columns = [x.lower() for x in df.columns]
+    dtype = df.columns[df.dtypes.eq(object)]
+    df[dtype] = df[dtype].apply(pd.to_numeric, errors="coerce")
+    return df
+
+def save_data(path, file, df):
+    df.to_csv(path + file, index_label="datetime")
+    
 def hourlymean(data):
     # make column selection
     cols = ["latitude", "longitude", "altitude", "pressure", "sza", "am", "sdcorr",
@@ -55,9 +67,13 @@ def hourlymean(data):
     
     return df_mean
 
+def main(path, readfile, savefile):
+    data = read_data(path, readfile)
+    data_mean = hourlymean(data)
+    save_data(path, savefile, data_mean)
+
+
 path = "/Users/julia/Documents/MPI_Sonne/microtops/data/"
 readfile = "20190530c.txt"
 savefile = "20190530c_hourlymean.txt"
-data = rs_csv.read_data(path, readfile)
-data_mean = hourlymean(data)
-rs_csv.save_data(path, savefile, data_mean)
+main(path, readfile, savefile)
