@@ -24,7 +24,7 @@ def save_data(path, file, df):
     '''
     Saves pd.DataFrane to selected file.
     '''
-    df.to_csv(path + file, index_label="datetime")
+    df.to_csv(path + file, sep=" ", index_label="datetime")
     
 def hourlymean(data):
     '''
@@ -36,8 +36,7 @@ def hourlymean(data):
     '''
     # make column selection
     cols = ["latitude", "longitude", "altitude", "pressure", "sza", "am",
-            "sdcorr", "temp", "id", "aot380", "aot440", "aot675", "aot870",
-            "aot936", "water"]
+            "temp", "aot380", "aot440", "aot675", "aot870", "aot936", "water"]
     data = data[cols]
     
     # setting timedeltas
@@ -75,8 +74,15 @@ def hourlymean(data):
     df_min = df_min.drop(["timediff1", "timediff2"], axis=1)
     df_min = df_min.astype(float)
     
-    # calculate hourly mean values
+    # calculate hourly mean values, datetimeindex without min, sec
     sampled = df_min.resample("H")
+    # drop values per hour where value is more than 25% larger than minimum
+    sel_df = pd.DataFrame()
+    for date, df in sampled:
+        temp_df = df[df["aot936"] < df["aot936"].min() * 1.25]
+        sel_df = pd.concat([sel_df, temp_df])
+    
+    sampled = sel_df.resample("H")
     df_mean = sampled.mean().round(3).dropna(how="all")
     # add column with number of measurements per hour
     df_mean = df_mean.assign(size=sampled.size())
@@ -93,3 +99,5 @@ path = "/Users/julia/Documents/MPI_Sonne/microtops/data/"
 readfile = "20190530c.txt"
 savefile = "20190530c_hourlymean.txt"
 main(path, readfile, savefile)
+#data = read_data(path, readfile)
+#df_min, df_mean = hourlymean(data)
