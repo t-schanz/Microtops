@@ -6,6 +6,7 @@ Created on Thu May 30 08:47:23 2019
 @author: julia
 """
 import pandas as pd
+import math
 
 def read_data(path,file):
     '''
@@ -24,7 +25,7 @@ def save_data(path, file, df):
     '''
     Saves pd.DataFrane to selected file.
     '''
-    df.to_csv(path + file, sep=" ", index_label="datetime")
+    df.to_csv(path + file, sep=" ", index=False)
     
 def hourlymean(data):
     '''
@@ -83,10 +84,30 @@ def hourlymean(data):
         sel_df = pd.concat([sel_df, temp_df])
     
     sampled = sel_df.resample("H")
-    df_mean = sampled.mean().round(3).dropna(how="all")
-    # add column with number of measurements per hour
+    df_mean = sampled.mean().dropna(how="all")
+    # add column with number of measurements per hour and date and hour
     df_mean = df_mean.assign(size=sampled.size())
+    df_mean = df_mean.assign(date=df_mean.index.strftime("%m/%d/%y"))
+    df_mean = df_mean.assign(hour=df_mean.index.strftime("%H"))
     
+    # Angstrom parameter ANG = LN(AOD440/AOD870)/LN(0.87/0.44)
+    df_mean = df_mean.assign(ang=((df_mean.aot440 / df_mean.aot870).apply(math.log)
+                                  / math.log(.87/.44)))
+    # AOD bei 550nm AOD550 = EXP(-ANG*LN(0.55/0.44)+LN(AOD440))
+    df_mean = df_mean.assign(aot550=(-df_mean.ang * math.log(.55 / .44)
+                                     + (df_mean.aot440).apply(math.log)
+                                     ).apply(math.exp))
+    # Aerosol Index (=AOD550 * ANG)
+    df_mean = df_mean.assign(aeroind=df_mean.aot550 * df_mean.ang)
+    # TODO fine-mode AOD fraction  (wie anteilig tragt fine mode aerosol (r<0.5um) zur AOD550 bei)
+#    df_mean = df_mean.assign(finefrac=df_mean.)
+    
+    df_mean = df_mean.round(3)
+    mean_cols = ["date", "hour", "latitude", "longitude", "altitude",
+                 "pressure", "sza", "am", "temp", "aot380", "aot440",
+                 "aot550", "aot675", "aot870", "aot936", "water", "ang",
+                 "aeroind", "size"]
+    df_mean = df_mean[mean_cols]
     return df_mean
 
 def main(path, readfile, savefile):
