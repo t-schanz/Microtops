@@ -95,9 +95,9 @@ def main(path, readfile, savefile):
     save_data(path, savefile, data_mean)
 
 
-path = "/Users/julia/Documents/MPI_Sonne/microtops/data/"
-readfile = "20190530c.txt"
-savefile = "20190530c_hourlymean.txt"
-main(path, readfile, savefile)
-#data = read_data(path, readfile)
-#df_min, df_mean = hourlymean(data)
+if __name__ == "__main__":
+    path = "/Users/julia/Documents/MPI_Sonne/microtops/data/"
+    readfile = "20190530c.txt"
+    savefile = "20190530c_hourlymean.txt"
+    main(path, readfile, savefile)
+
