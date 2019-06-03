@@ -88,8 +88,8 @@ def main(path, readfile, savefile):
     data_mean = hourlymean(data)
     save_data(path, savefile, data_mean)
 
-
-path = "/Users/julia/Documents/MPI_Sonne/microtops/data/"
-readfile = "20190530c.txt"
-savefile = "20190530c_hourlymean.txt"
-main(path, readfile, savefile)
+if __name__ == "__main__":
+    path = "/Users/julia/Documents/MPI_Sonne/microtops/data/"
+    readfile = "20190530c.txt"
+    savefile = "20190530c_hourlymean.txt"
+    main(path, readfile, savefile)

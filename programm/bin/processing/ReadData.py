@@ -5,10 +5,27 @@ import time
 import logging
 import numpy as np
 from dateutil import parser
+from serial.tools import list_ports
 
 class MicroReader(object):
-    def __init__(self, port, outpath="./", bitrate=4800):
-        self.port = port
+    def __init__(self, port=None, outpath="../../output/", bitrate=4800):
+
+        if port is None:
+            ports = [p for p,_,_ in list_ports.comports()]
+            if len(ports) == 0:
+                raise SystemError("No COM ports found. Make sure you have installed"
+                                  " the right drivers. You can otherwise provide the "
+                                  "name of the port to the program")
+            elif len(ports) > 1:
+                port_list = '\n'.join(ports)
+                raise LookupError(f"More than one COM port was found. Please"
+                                  f"provide the right port to the program:\n"
+                                  f"{port_list}")
+            else:
+                self.port = ports[0]
+
+        else:
+            self.port = port
         self.bitrate = bitrate
         self.outpath = outpath
         self.data = None
@@ -26,7 +43,7 @@ class MicroReader(object):
         decode_func = np.vectorize(lambda x: x.decode().replace("\r\n","\n"))
         self.raw_data_decoded = decode_func(self.raw_data)
         self.raw_str = b"".join(self.raw_data).decode()
-        self.data = np.genfromtxt(map(lambda s: s.decode().encode('utf8'), self.raw_data),
+        self.data = np.genfromtxt(map(lambda s: s.encode('utf8'), self.raw_data_decoded),
                                 delimiter=",",
                                 skip_header=2,
                                 skip_footer=1,
@@ -35,8 +52,8 @@ class MicroReader(object):
                                   )
 
     def write_output(self):
-        outfile = os.path.join(self.outpath, self.get_filename())
-        f = open(outfile, 'w')
+        self.outfile = os.path.join(self.outpath, self.get_filename())
+        f = open(self.outfile, 'w')
         f.writelines(self.raw_data_decoded)
         f.close()
 
@@ -51,6 +68,7 @@ class MicroReader(object):
 
 
 if __name__ == '__main__':
-    MTR = MicroReader(port="COM3")
+    MTR = MicroReader()
     MTR.read_microtop_data()
     MTR.write_output()
+
