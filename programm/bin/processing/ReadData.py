@@ -35,7 +35,7 @@ class MicroReader(object):
         logging.info("Initiated communication")
         time.sleep(1)
         connection.write("\r\n".encode())
-        logging.info("Reading data")
+        logging.info("Waking up device")
         menu = connection.readlines()
         connection.write("P".encode())
         self.raw_data = connection.readlines()
@@ -65,6 +65,20 @@ class MicroReader(object):
 
         filename = f"Microtops_{start_date}_to_{end_date}.txt"
         return filename
+
+    def clear_data(self):
+        connection = serial.Serial(self.port, timeout=1, baudrate=self.bitrate)
+        logging.info("Initiated communication")
+        time.sleep(1)
+        connection.write("\r\n".encode())
+        logging.info("Waking up device")
+        menu = connection.readlines()
+        connection.write("C".encode())
+        safety_check = connection.readlines()
+        connection.write("Y".encode())
+        result =  safety_check = connection.readlines()
+        logging.info("".join([x.decode().replace("\r\n","\n") for x in result]))
+        connection.close()
 
 
 if __name__ == '__main__':
