@@ -101,10 +101,12 @@ def hourlymean(data):
     
     # add column with number of measurements per hour and date and hour
     df_mean = df_mean.assign(size=sampled.size())
-    df_mean = df_mean.assign(date=df_mean.index.strftime("%m/%d/%y"))
+    df_mean = df_mean.assign(year=df_mean.index.strftime("%Y"))
+    df_mean = df_mean.assign(month=df_mean.index.strftime("%m"))
+    df_mean = df_mean.assign(day=df_mean.index.strftime("%d"))
     df_mean = df_mean.assign(hour=df_mean.index.strftime("%H"))
     df_mean = df_mean.round(3)
-    mean_cols = ["date", "hour", "latitude", "longitude", "altitude",
+    mean_cols = ["year", "month", "day", "hour", "latitude", "longitude", "altitude",
                  "pressure", "sza", "am", "temp", "aot380", "aot440",
                  "aot550", "aot675", "aot870", "aot936", "water", "ang",
                  "aeroind", "size"]
